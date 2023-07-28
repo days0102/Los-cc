@@ -37,37 +37,37 @@ SECTIONS
     赋值
     */
     .text : {   /* 需要空格 */
-        PROVIDE(textstart = . );
+        PROVIDE(text_start = . );
         *(.text .text.*)
-        PROVIDE(textend = . );
+        PROVIDE(text_end = . );
         
         /* usertrap  */
         . = ALIGN(4096);
-        *(traptext)  /* 把 usertrap.S 放到这里 */
+        *(trap_text)  /* 把 usertrap.S 放到这里 */
     }>ram
 
     .data : {
         . = ALIGN(4096); 
-		PROVIDE(datastart = .);
+		PROVIDE(data_start = .);
         *(.sdata .sdata.*)
 		*(.data .data.*)
-		PROVIDE(dataend = .);
+		PROVIDE(data_end = .);
     }>ram
 
     .rodata : {
         . = ALIGN(4096);        /*保证位1个页偏移*/
-		PROVIDE(rodatastart = .);
+		PROVIDE(rodata_start = .);
 		*(.rodata .rodata.*)
-		PROVIDE(rodataend = .);
+		PROVIDE(rodata_end = .);
 	} >ram
     
     .bss : {
         . = ALIGN(4096);
-        PROVIDE(bssstart = .);
+        PROVIDE(bss_start = .);
 		*(.sbss .sbss.*)
 		*(.bss .bss.*)
 		*(COMMON)
-		PROVIDE(bssend = .);
+		PROVIDE(bss_end = .);
     }>ram
 
     /* .traptext : { */
@@ -77,9 +77,9 @@ SECTIONS
 
     . = ALIGN(4096);
 
-    PROVIDE(memstart = ORIGIN(ram));
-    PROVIDE(memend = ORIGIN(ram)+LENGTH(ram));
+    PROVIDE(mem_start = ORIGIN(ram));
+    PROVIDE(mem_end = ORIGIN(ram)+LENGTH(ram));
 
-    PROVIDE(mstart = .);         /* 堆的起始位置 */
-    PROVIDE(mend = memend);
+    PROVIDE(heap_start = .);         /* 堆的起始位置 */
+    PROVIDE(heap_end = mem_end);
 }

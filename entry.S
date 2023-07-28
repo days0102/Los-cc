@@ -9,7 +9,7 @@
 .extern start
 
 .equ harts,8        # hart 数量
-.equ sz,4096        # 每个 hart 的栈大小
+.equ size,4096        # 每个 hart 的栈大小
 
 .global _start      # 入口地址
 .section .text
@@ -31,7 +31,7 @@ _start:
     # 初始化栈
     addi t0,t0,1
     la sp,stacks
-    li t1,sz
+    li t1,size
     mul t1,t1,t0
     add sp,sp,t1 # 栈指针指向栈顶
     
@@ -46,5 +46,5 @@ empty:
 .global stacks
 # .balign 4096 # n字节对齐
 stacks:
-    .skip sz*harts  # 分配栈空间 (.space)
+    .skip size*harts  # 分配栈空间 (.space)
     .end
