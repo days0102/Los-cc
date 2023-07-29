@@ -4,9 +4,9 @@ project(los-cc)
 
 set(CMAKE_CROSSCOMPILING TRUE)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 set(COMPILE_COMMANDS_PATH ${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json)
+# 设置包含路径
+set(INCLUDE_DIRS "-I${CMAKE_CURRENT_SOURCE_DIR}")
 
 set(CXX_STANDARD 17)
 
@@ -33,7 +33,6 @@ enable_language(ASM)
 
 # set(CMAKE_VERBOSE_MAKEFILE ON) #调试时使用
 
-
 # Set other variables
 set(QEMU "qemu-system-riscv32") # Change this to "qemu-system-riscv64" for 64-bit
 set(CPUS 1)
@@ -47,11 +46,10 @@ set(QFLAGS "-nographic;-smp;${CPUS};-machine;virt;-bios;none")
 ###########################################################
 
 # 添加汇编文件
-file(GLOB SRCS_ASM "*.S")
+file(GLOB_RECURSE SRCS_ASM "src/*.S")
 
 foreach(SRC_ASM ${SRCS_ASM})
     get_filename_component(SRC_ASM_NAME ${SRC_ASM} NAME_WE)
-    message(STATUS  ${CMAKE_CURRENT_BINARY_DIR})
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${SRC_ASM_NAME}.o
         COMMAND ${CMAKE_ASM_COMPILER} ${CMAKE_ASM_FLAGS} -c ${SRC_ASM} -o ${CMAKE_CURRENT_BINARY_DIR}/${SRC_ASM_NAME}.o
@@ -60,9 +58,11 @@ foreach(SRC_ASM ${SRCS_ASM})
     list(APPEND OBJS ${CMAKE_CURRENT_BINARY_DIR}/${SRC_ASM_NAME}.o)
 endforeach()
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR} RECURSIVE)
+# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
 # 添加源文件
-file(GLOB SRCS_CC "*.cc")
+file(GLOB_RECURSE SRCS_CC "src/*.cc")
 
 foreach(SRC_CC ${SRCS_CC})
     get_filename_component(SRC_CC_NAME ${SRC_CC} NAME_WE)
@@ -73,6 +73,7 @@ foreach(SRC_CC ${SRCS_CC})
         COMMAND
             ${CMAKE_CXX_COMPILER}
             ${CXX_FLAGS}
+            ${INCLUDE_DIRS}
             -c
             ${SRC_CC}
             -o
@@ -91,7 +92,8 @@ add_link_options("-T ${CMAKE_CURRENT_SOURCE_DIR}/kernel.ld")
 # target_link_options(kernel.elf PRIVATE ${OBJS} "-T ${CMAKE_CURRENT_SOURCE_DIR}/kernel.ld")
 set_target_properties(kernel.elf PROPERTIES LINKER_LANGUAGE CXX)
 
-
+add_subdirectory(lib)
+add_subdirectory(test)
 #####################################################################################
 # clang-tidy
 #
@@ -99,7 +101,7 @@ set_target_properties(kernel.elf PROPERTIES LINKER_LANGUAGE CXX)
 # 搜索 clang-tidy
 find_program(CLANG_TIDY_EXE NAMES "clang-tidy-12" REQUIRED)
 # 禁用了所有默认检查 (-*)，并且只启用了提倡使用现代 C++ 语言结构的检查 ( modernize-*)。
-set(CLANG_TIDY_COMMAND "${CLANG_TIDY_EXE}" "-p;${COMPILE_COMMANDS_PATH}" "-checks=-*,modernize-*")
+set(CLANG_TIDY_COMMAND "${CLANG_TIDY_EXE}" "-p;${COMPILE_COMMANDS_PATH}" "-checks=-*,modernize-*" "-extra-arg=-Iinc")
 # 为构建目标clang-tidy设置属性
 set_target_properties(kernel.elf PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
 
